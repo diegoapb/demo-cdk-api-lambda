@@ -1,15 +1,34 @@
 import * as cdk from '@aws-cdk/core';
-// import * as sqs from '@aws-cdk/aws-sqs';
+//import Function
+import { Code, Function as LambdaFunction, Runtime } from '@aws-cdk/aws-lambda';
+//import Bucket
+import { Bucket } from '@aws-cdk/aws-s3';
+//import API
+import { RestApi, LambdaIntegration } from '@aws-cdk/aws-apigateway';
 
+//import utils path
+import { join } from 'path';
 export class DemoCdkApiLambdaStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    //Bucket
+    const bucket = new Bucket(this, 'HelloBucket');
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'DemoCdkApiLambdaQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    //Handler
+    const handler = new LambdaFunction(this, 'HelloHandler', {
+      runtime: Runtime.NODEJS_14_X,
+      code: Code.fromAsset(join(__dirname, '../lambda')),
+      handler: 'handler.sayHello',
+    });
+
+    //API Gateway
+    const api = new RestApi(this, 'HelloRestApi')
+
+    //Integration POST /hello with Lambda
+    api.root
+    .resourceForPath('/hello')
+    .addMethod('POST', new LambdaIntegration(handler));
+
   }
 }
